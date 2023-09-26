@@ -4,7 +4,8 @@ CREATE TABLE sales_data (
     quantity_sold INT,
     revenue DECIMAL(10, 2)
     );
-	
+	select * from sales_data
+	drop table sales_data
 INSERT INTO sales_data (date, product, quantity_sold, revenue)
 VALUES
     ('2023-09-01', 'Product A', 100, 250.00),
@@ -81,63 +82,62 @@ VALUES
 ----Impute missing values in quantity_sold column with the median value
 
     UPDATE sales_data t1
-    SET quantity_sold = (
-    SELECT x.quantity_sold
+    SET revenue = (
+    SELECT x.revenue
     FROM sales_data x
     WHERE x.product = t1.product
-    AND x.quantity_sold IS NOT NULL
-    ORDER BY x.quantity_sold
+    AND x.revenue IS NOT NULL
+    ORDER BY x.revenue
     LIMIT 1 OFFSET (
         SELECT COUNT(*) / 2
         FROM sales_data y
         WHERE y.product = t1.product
-        AND y.quantity_sold IS NOT NULL)
+        AND y.revenue IS NOT NULL)
         )
-    WHERE quantity_sold IS NULL;
+    WHERE revenue IS NULL;
 	
 	
 ----Impute missing values in quantity_sold column using LOCF
 
 
     UPDATE sales_data t1
-    SET quantity_sold = (
-    SELECT TOP 1 x.quantity_sold
+SET quantity_sold = (
+    SELECT x.quantity_sold
     FROM sales_data x
     WHERE x.product = t1.product
       AND x.quantity_sold IS NOT NULL
       AND x.date <= t1.date
-      ORDER BY x.date DESC
-      )
-      WHERE quantity_sold IS NULL;
+    ORDER BY x.date DESC
+    LIMIT 1
+)
+WHERE quantity_sold IS NULL;
 	  
-	  
+	 
 ----Impute missing values in quantity_sold column using NOCB
 
     UPDATE sales_data t1
     SET quantity_sold = (
-    SELECT TOP 1 x.quantity_sold
+    SELECT x.quantity_sold
     FROM sales_data x
     WHERE x.product = t1.product
       AND x.quantity_sold IS NOT NULL
       AND x.date >= t1.date
     ORDER BY x.date ASC
+	LIMIT 1
     )
     WHERE quantity_sold IS NULL;
+
 
 
 ----Query that ignores missing values and calculates the average revenue per product
 
     SELECT product,
-    AVG(revenue) AS average_revenue
+    ROUND(AVG(revenue),2) AS average_revenue
     FROM sales_data
     GROUP BY product;
-	
-	select * from sales_data
 	
 	Select Product,sum(quantity_sold) As Total_Quantity
 	from sales_data
 	group by product 
 	Order BY Product ASC
-	
-
 	
